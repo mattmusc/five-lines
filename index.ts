@@ -32,6 +32,22 @@ enum Input {
   UP, DOWN, LEFT, RIGHT
 }
 
+const LEFT_KEY = 37;
+const UP_KEY = 38;
+const RIGHT_KEY = 39;
+const DOWN_KEY = 40;
+
+const keyToInput = {
+  [LEFT_KEY]: Input.LEFT,
+  a: Input.LEFT,
+  [UP_KEY]: Input.UP,
+  w: Input.UP,
+  [RIGHT_KEY]: Input.RIGHT,
+  d: Input.RIGHT,
+  [DOWN_KEY]: Input.DOWN,
+  s: Input.DOWN,
+};
+
 let playerx = 1;
 let playery = 1;
 let map: Tile[][] = [
@@ -181,14 +197,10 @@ window.onload = () => {
   gameLoop();
 }
 
-const LEFT_KEY = 37;
-const UP_KEY = 38;
-const RIGHT_KEY = 39;
-const DOWN_KEY = 40;
 window.addEventListener("keydown", e => {
-  if (e.keyCode === LEFT_KEY || e.key === "a") inputs.push(Input.LEFT);
-  else if (e.keyCode === UP_KEY || e.key === "w") inputs.push(Input.UP);
-  else if (e.keyCode === RIGHT_KEY || e.key === "d") inputs.push(Input.RIGHT);
-  else if (e.keyCode === DOWN_KEY || e.key === "s") inputs.push(Input.DOWN);
+  const input = keyToInput[e.key];
+  if (input) {
+    inputs.push(input);
+  }
 });
 
