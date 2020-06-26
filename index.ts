@@ -111,6 +111,11 @@ function moveVertical(dy: number) {
 }
 
 function update() {
+  updatePlayerPosition();
+  updateMap();
+}
+
+function updatePlayerPosition(): void {
   while (inputs.length > 0) {
     let current = inputs.pop();
     if (current === Input.LEFT)
@@ -122,7 +127,9 @@ function update() {
     else if (current === Input.DOWN)
       moveVertical(1);
   }
+}
 
+function updateMap(): void {
   for (let y = map.length - 1; y >= 0; y--) {
     for (let x = 0; x < map[y].length; x++) {
       if ((map[y][x] === Tile.STONE || map[y][x] === Tile.FALLING_STONE)
@@ -144,11 +151,7 @@ function update() {
 
 function draw() {
   const g: CanvasRenderingContext2D = prepareCanvas2d("GameCanvas");
-
-  // Draw map
   drawMap(g);
-
-  // Draw player
   drawPlayer(g);
 }
 
