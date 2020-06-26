@@ -40,16 +40,20 @@ const DOWN_KEY = 40;
 const keyToInput = {
   [LEFT_KEY]: Input.LEFT,
   a: Input.LEFT,
+  ArrowLeft: Input.LEFT,
   [UP_KEY]: Input.UP,
   w: Input.UP,
+  ArrowUp: Input.UP,
   [RIGHT_KEY]: Input.RIGHT,
   d: Input.RIGHT,
+  ArrowRight: Input.RIGHT,
   [DOWN_KEY]: Input.DOWN,
   s: Input.DOWN,
+  ArrowDown: Input.DOWN,
 };
 
 type Move = {
-  isValid: (moveArgs: MoveArgs) => boolean,
+  isValid: (moveArgs: Partial<MoveArgs>) => boolean,
   perform: (moveArgs: MoveArgs) => void,
 };
 
@@ -61,8 +65,9 @@ const moves: Move[] = [
   // horizontal moves
   {
     isValid: ({dx}) =>
-      map[playery][playerx + dx] === Tile.FLUX
-      || map[playery][playerx + dx] === Tile.AIR,
+      dx !== undefined &&
+      (map[playery][playerx + dx] === Tile.FLUX
+        || map[playery][playerx + dx] === Tile.AIR),
 
     perform: ({dx}) => {
       moveToTile(playerx + dx, playery);
@@ -71,6 +76,7 @@ const moves: Move[] = [
 
   {
     isValid: ({dx}) =>
+      dx !== undefined &&
       (map[playery][playerx + dx] === Tile.STONE
         || map[playery][playerx + dx] === Tile.BOX)
       && map[playery][playerx + dx + dx] === Tile.AIR
@@ -82,7 +88,9 @@ const moves: Move[] = [
   },
 
   {
-    isValid: ({dx}) => map[playery][playerx + dx] === Tile.KEY1,
+    isValid: ({dx}) =>
+      dx !== undefined &&
+      map[playery][playerx + dx] === Tile.KEY1,
 
     perform: ({dx}) => {
       remove(Tile.LOCK1);
@@ -91,7 +99,9 @@ const moves: Move[] = [
   },
 
   {
-    isValid: ({dx}) => map[playery][playerx + dx] === Tile.KEY2,
+    isValid: ({dx}) =>
+      dx !== undefined &&
+      map[playery][playerx + dx] === Tile.KEY2,
 
     perform: ({dx}) => {
       remove(Tile.LOCK2);
@@ -101,15 +111,20 @@ const moves: Move[] = [
 
   // vertical moves
   {
-    isValid: ({dy}) =>
-      map[playery + dy][playerx] === Tile.FLUX
-      || map[playery + dy][playerx] === Tile.AIR,
+    isValid: ({dy}) => {
+      return dy !== undefined &&
+        (map[playery + dy][playerx] === Tile.FLUX
+          || map[playery + dy][playerx] === Tile.AIR);
+    },
 
+    // up/down move
     perform: ({dy}) => moveToTile(playerx, playery + dy),
   },
 
   {
-    isValid: ({dy}) => map[playery + dy][playerx] === Tile.KEY1,
+    isValid: ({dy}) =>
+      dy !== undefined &&
+      map[playery + dy][playerx] === Tile.KEY1,
 
     perform: ({dy}) => {
       remove(Tile.LOCK1);
@@ -118,7 +133,9 @@ const moves: Move[] = [
   },
 
   {
-    isValid: ({dy}) => map[playery + dy][playerx] === Tile.KEY2,
+    isValid: ({dy}) =>
+      dy !== undefined &&
+      map[playery + dy][playerx] === Tile.KEY2,
 
     perform: ({dy}) => {
       remove(Tile.LOCK2);
@@ -128,10 +145,10 @@ const moves: Move[] = [
 ];
 
 const inputToMoveMethod = {
-  [Input.LEFT]: () => moveHorizontal(-1),
-  [Input.RIGHT]: () => moveHorizontal(1),
-  [Input.UP]: () => moveVertical(-1),
-  [Input.DOWN]: () => moveVertical(1),
+  [Input.LEFT]: () => movePlayer(-1, 0),
+  [Input.RIGHT]: () => movePlayer(1, 0),
+  [Input.UP]: () => movePlayer(0, -1),
+  [Input.DOWN]: () => movePlayer(0,1),
 };
 
 let inputs: Input[] = [];
@@ -164,35 +181,14 @@ function moveToTile(newx: number, newy: number) {
   playery = newy;
 }
 
-function moveHorizontal(dx: number) {
-  if (map[playery][playerx + dx] === Tile.FLUX
-    || map[playery][playerx + dx] === Tile.AIR) {
-    moveToTile(playerx + dx, playery);
-  } else if ((map[playery][playerx + dx] === Tile.STONE
-    || map[playery][playerx + dx] === Tile.BOX)
-    && map[playery][playerx + dx + dx] === Tile.AIR
-    && map[playery + 1][playerx + dx] !== Tile.AIR) {
-    map[playery][playerx + dx + dx] = map[playery][playerx + dx];
-    moveToTile(playerx + dx, playery);
-  } else if (map[playery][playerx + dx] === Tile.KEY1) {
-    remove(Tile.LOCK1);
-    moveToTile(playerx + dx, playery);
-  } else if (map[playery][playerx + dx] === Tile.KEY2) {
-    remove(Tile.LOCK2);
-    moveToTile(playerx + dx, playery);
-  }
-}
+function movePlayer(dx: number, dy: number) {
+  const move = moves.find(m => m.isValid({dx, dy}));
 
-function moveVertical(dy: number) {
-  if (map[playery + dy][playerx] === Tile.FLUX
-    || map[playery + dy][playerx] === Tile.AIR) {
-    moveToTile(playerx, playery + dy);
-  } else if (map[playery + dy][playerx] === Tile.KEY1) {
-    remove(Tile.LOCK1);
-    moveToTile(playerx, playery + dy);
-  } else if (map[playery + dy][playerx] === Tile.KEY2) {
-    remove(Tile.LOCK2);
-    moveToTile(playerx, playery + dy);
+  if (move) {
+    const px = playerx;
+    const py = playery;
+
+    move.perform({px, py, dx, dy});
   }
 }
 
@@ -284,7 +280,7 @@ window.onload = () => {
 
 window.addEventListener("keydown", e => {
   const input = keyToInput[e.key];
-  if (input) {
+  if (input !== undefined) {
     inputs.push(input);
   }
 });
