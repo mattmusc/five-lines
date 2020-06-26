@@ -28,6 +28,53 @@ const tileColors = {
 };
 const PLAYER_COLOR = "#ff0000";
 
+type TileCoords = {
+  x: number,
+  y: number,
+};
+
+type MapUpdater = {
+  canUseTileAt: ({x, y}: TileCoords) => boolean,
+
+  performUpdateAt: ({x, y}: TileCoords) => void,
+};
+
+const mapUpdaters: MapUpdater[] = [
+  {
+    canUseTileAt: ({x, y}: TileCoords) =>
+      (map[y][x] === Tile.STONE || map[y][x] === Tile.FALLING_STONE)
+      && map[y + 1][x] === Tile.AIR,
+
+    performUpdateAt: ({x, y}: TileCoords) => {
+      map[y + 1][x] = Tile.FALLING_STONE;
+      map[y][x] = Tile.AIR;
+    },
+  },
+  {
+    canUseTileAt: ({x, y}: TileCoords) => (map[y][x] === Tile.BOX || map[y][x] === Tile.FALLING_BOX)
+      && map[y + 1][x] === Tile.AIR,
+
+    performUpdateAt: ({x, y}: TileCoords) => {
+      map[y + 1][x] = Tile.FALLING_BOX;
+      map[y][x] = Tile.AIR;
+    },
+  },
+  {
+    canUseTileAt: ({x, y}: TileCoords) => map[y][x] === Tile.FALLING_STONE,
+
+    performUpdateAt: ({x, y}: TileCoords) => {
+      map[y][x] = Tile.STONE;
+    },
+  },
+  {
+    canUseTileAt: ({x, y}: TileCoords) => map[y][x] === Tile.FALLING_BOX,
+
+    performUpdateAt: ({x, y}: TileCoords) => {
+      map[y][x] = Tile.BOX
+    },
+  },
+];
+
 enum Input {
   UP, DOWN, LEFT, RIGHT
 }
@@ -201,7 +248,7 @@ function updatePlayerPosition(): void {
   while (inputs.length > 0) {
     const moveMethod = inputToMoveMethod[inputs.pop()];
 
-    if (moveMethod) {
+    if (moveMethod !== undefined) {
       moveMethod();
     }
   }
@@ -210,18 +257,11 @@ function updatePlayerPosition(): void {
 function updateMap(): void {
   for (let y = map.length - 1; y >= 0; y--) {
     for (let x = 0; x < map[y].length; x++) {
-      if ((map[y][x] === Tile.STONE || map[y][x] === Tile.FALLING_STONE)
-        && map[y + 1][x] === Tile.AIR) {
-        map[y + 1][x] = Tile.FALLING_STONE;
-        map[y][x] = Tile.AIR;
-      } else if ((map[y][x] === Tile.BOX || map[y][x] === Tile.FALLING_BOX)
-        && map[y + 1][x] === Tile.AIR) {
-        map[y + 1][x] = Tile.FALLING_BOX;
-        map[y][x] = Tile.AIR;
-      } else if (map[y][x] === Tile.FALLING_STONE) {
-        map[y][x] = Tile.STONE;
-      } else if (map[y][x] === Tile.FALLING_BOX) {
-        map[y][x] = Tile.BOX;
+      const tileCoords = {x, y};
+      const updateMethod = mapUpdaters.find(m => m.canUseTileAt(tileCoords));
+
+      if (updateMethod) {
+        updateMethod.performUpdateAt(tileCoords);
       }
     }
   }
