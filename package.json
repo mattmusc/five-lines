@@ -1,0 +1,24 @@
+{
+  "name": "five-lines",
+  "version": "1.0.0",
+  "description": "In this kata your task is to refactor the code for a small game. When finished it should be easy to add new tile types, or make the key draw as a circle, so we can easily distinguish it from the lock.",
+  "main": "index.ts",
+  "scripts": {
+    "build": "tsc",
+    "start": "tsc -w"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mattmusc/five-lines.git"
+  },
+  "keywords": [],
+  "author": "mattmusc",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mattmusc/five-lines/issues"
+  },
+  "homepage": "https://github.com/mattmusc/five-lines#readme",
+  "devDependencies": {
+    "typescript": "^3.9.5"
+  }
+}
