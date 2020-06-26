@@ -48,6 +48,94 @@ const keyToInput = {
   s: Input.DOWN,
 };
 
+type Move = {
+  isValid: (moveArgs: MoveArgs) => boolean,
+  perform: (moveArgs: MoveArgs) => void,
+};
+
+type MoveArgs = {
+  px: number, py: number, dx: number, dy: number,
+}
+
+const moves: Move[] = [
+  // horizontal moves
+  {
+    isValid: ({dx}) =>
+      map[playery][playerx + dx] === Tile.FLUX
+      || map[playery][playerx + dx] === Tile.AIR,
+
+    perform: ({dx}) => {
+      moveToTile(playerx + dx, playery);
+    },
+  },
+
+  {
+    isValid: ({dx}) =>
+      (map[playery][playerx + dx] === Tile.STONE
+        || map[playery][playerx + dx] === Tile.BOX)
+      && map[playery][playerx + dx + dx] === Tile.AIR
+      && map[playery + 1][playerx + dx] !== Tile.AIR,
+
+    perform: ({dx}) => {
+      moveToTile(playerx + dx, playery);
+    },
+  },
+
+  {
+    isValid: ({dx}) => map[playery][playerx + dx] === Tile.KEY1,
+
+    perform: ({dx}) => {
+      remove(Tile.LOCK1);
+      moveToTile(playerx + dx, playery);
+    },
+  },
+
+  {
+    isValid: ({dx}) => map[playery][playerx + dx] === Tile.KEY2,
+
+    perform: ({dx}) => {
+      remove(Tile.LOCK2);
+      moveToTile(playerx + dx, playery);
+    },
+  },
+
+  // vertical moves
+  {
+    isValid: ({dy}) =>
+      map[playery + dy][playerx] === Tile.FLUX
+      || map[playery + dy][playerx] === Tile.AIR,
+
+    perform: ({dy}) => moveToTile(playerx, playery + dy),
+  },
+
+  {
+    isValid: ({dy}) => map[playery + dy][playerx] === Tile.KEY1,
+
+    perform: ({dy}) => {
+      remove(Tile.LOCK1);
+      moveToTile(playerx, playery + dy);
+    },
+  },
+
+  {
+    isValid: ({dy}) => map[playery + dy][playerx] === Tile.KEY2,
+
+    perform: ({dy}) => {
+      remove(Tile.LOCK2);
+      moveToTile(playerx, playery + dy);
+    },
+  },
+];
+
+const inputToMoveMethod = {
+  [Input.LEFT]: () => moveHorizontal(-1),
+  [Input.RIGHT]: () => moveHorizontal(1),
+  [Input.UP]: () => moveVertical(-1),
+  [Input.DOWN]: () => moveVertical(1),
+};
+
+let inputs: Input[] = [];
+
 let playerx = 1;
 let playery = 1;
 let map: Tile[][] = [
@@ -58,8 +146,6 @@ let map: Tile[][] = [
   [2, 4, 1, 1, 1, 9, 0, 2],
   [2, 2, 2, 2, 2, 2, 2, 2],
 ];
-
-let inputs: Input[] = [];
 
 function remove(tile: Tile) {
   for (let y = 0; y < map.length; y++) {
@@ -117,15 +203,11 @@ function update() {
 
 function updatePlayerPosition(): void {
   while (inputs.length > 0) {
-    let current = inputs.pop();
-    if (current === Input.LEFT)
-      moveHorizontal(-1);
-    else if (current === Input.RIGHT)
-      moveHorizontal(1);
-    else if (current === Input.UP)
-      moveVertical(-1);
-    else if (current === Input.DOWN)
-      moveVertical(1);
+    const moveMethod = inputToMoveMethod[inputs.pop()];
+
+    if (moveMethod) {
+      moveMethod();
+    }
   }
 }
 
